@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="370" viewBox="0 0 900 370" role="img" aria-labelledby="title desc">
+  <title id="title">Herdr Agent Sidebar 效果示意</title>
+  <desc id="desc">左侧显示任务、agent、pane ID、运行状态和目录，右侧是终端工作区域。所有数据为示例。</desc>
+  <rect width="900" height="370" rx="16" fill="#11111b"/>
+  <circle cx="24" cy="22" r="5" fill="#f38ba8"/><circle cx="42" cy="22" r="5" fill="#f9e2af"/><circle cx="60" cy="22" r="5" fill="#a6e3a1"/>
+  <text x="86" y="27" font-family="system-ui,sans-serif" font-size="13" fill="#a6adc8">Herdr · agent sidebar · 示例</text>
+  <rect x="12" y="44" width="350" height="314" rx="9" fill="#181825"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="30" y="73" font-size="12" fill="#9399b2">AGENTS</text>
+    <rect x="24" y="87" width="326" height="75" rx="7" fill="#313244"/>
+    <circle cx="39" cy="108" r="4" fill="#a6e3a1"/>
+    <text x="54" y="114" font-size="17" font-weight="600" fill="#cdd6f4">复现 Attention kernel</text>
+    <text x="54" y="135" font-size="13" fill="#a6adc8">pi · w1:p1 · working</text>
+    <text x="54" y="153" font-size="12" fill="#7f849c">research / attention</text>
+    <circle cx="39" cy="191" r="4" fill="#f9e2af"/>
+    <text x="54" y="197" font-size="17" font-weight="600" fill="#cdd6f4">检查论文引用</text>
+    <text x="54" y="219" font-size="13" fill="#a6adc8">Kimi Code · w1:p2 · blocked</text>
+    <text x="54" y="239" font-size="12" fill="#7f849c">papers / draft</text>
+    <circle cx="39" cy="280" r="4" fill="#89b4fa"/>
+    <text x="54" y="286" font-size="17" font-weight="600" fill="#cdd6f4">修复搜索框焦点</text>
+    <text x="54" y="308" font-size="13" fill="#a6adc8">codex · w1:p3 · idle</text>
+    <text x="54" y="328" font-size="12" fill="#7f849c">projects / search-app</text>
+  </g>
+  <g font-family="ui-monospace,monospace" font-size="14">
+    <text x="390" y="81" fill="#89b4fa">~/research/attention</text>
+    <text x="390" y="121" fill="#cdd6f4">$ python verify.py</text>
+    <text x="390" y="155" fill="#a6e3a1">✓ reference matches tiled attention</text>
+    <text x="390" y="188" fill="#9399b2">max error: 1.2e-7</text>
+    <text x="390" y="260" fill="#cdd6f4">$ <tspan fill="#89b4fa">▌</tspan></text>
+  </g>
+  <text x="390" y="336" font-family="system-ui,sans-serif" font-size="13" fill="#7f849c">任务名会更新 · pane ID 保持稳定</text>
+</svg>

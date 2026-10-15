@@ -1,0 +1,6 @@
+[ui.sidebar.agents]
+rows = [
+  ["state_icon", { token = "pane", bold = true, dim = false }, { token = "$task", bold = true, dim = false }],
+  ["agent", "$pane_id", "state_text"],
+  [{ token = "$folder", dim = true }],
+]

@@ -1,0 +1,11 @@
+Herdr Agent Sidebar
+Copyright 2026 APhysickui
+
+This project is an independent community integration for Herdr.
+Herdr is developed by herdrdev: https://github.com/herdrdev/herdr
+
+The Kimi compatibility hook derives its protocol and lifecycle event mapping
+from Herdr v0.8.2's Apache-2.0-licensed Kimi integration. The runtime and
+installer in this repository are distributed under the Apache License 2.0.
+
+Pi and Kimi Code are independent projects; their names do not imply endorsement.

@@ -1,0 +1,7 @@
+# Empty paths use the current user's home directory. Installer resolves herdr.
+herdr_binary = "herdr"
+socket_path = ""
+pi_sessions = ""
+pi_titles = true
+# Only enable for Herdr versions with the kimi-co process recognition problem.
+kimi_compat = false
