@@ -1,39 +1,39 @@
 id = "community.agent-sidebar"
 name = "Agent Sidebar"
-version = "0.1.0"
+version = "0.2.0"
 min_herdr_version = "0.8.2"
 description = "Task labels, stable pane IDs, readable folders and optional Pi/Kimi integrations."
 platforms = ["macos", "linux"]
 
 [[startup]]
-command = ["python3", "sync.py"]
+command = ["python3", "realtime.py", "--once"]
 
 [[actions]]
 id = "refresh"
 title = "Refresh agent sidebar"
 contexts = ["workspace"]
-command = ["python3", "sync.py"]
+command = ["python3", "realtime.py", "--once"]
 
 [[events]]
 on = "pane.created"
-command = ["python3", "sync.py"]
+command = ["python3", "realtime.py", "--once"]
 
 [[events]]
 on = "pane.moved"
-command = ["python3", "sync.py"]
+command = ["python3", "realtime.py", "--once"]
 
 [[events]]
 on = "pane.focused"
-command = ["python3", "sync.py"]
+command = ["python3", "realtime.py", "--once"]
 
 [[events]]
 on = "tab.focused"
-command = ["python3", "sync.py"]
+command = ["python3", "realtime.py", "--once"]
 
 [[events]]
 on = "pane.agent_detected"
-command = ["python3", "sync.py"]
+command = ["python3", "realtime.py", "--once"]
 
 [[events]]
 on = "pane.agent_status_changed"
-command = ["python3", "sync.py"]
+command = ["python3", "realtime.py", "--once"]

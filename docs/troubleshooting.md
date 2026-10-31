@@ -43,7 +43,7 @@ launchctl print gui/$(id -u)/dev.herdr.agent-sidebar
 cat ~/.local/share/herdr-agent-sidebar/refresh.log
 ```
 
-确认 `last exit code = 0`，配置的 socket 对应当前会话。已停止的任务显示 `not running` 是正常的：它每次执行完会退出，不是常驻进程。
+确认 `last exit code = 0`，配置的 socket 对应当前会话。新版实时服务应显示 `running`；`runs` 不应持续快速增加。旧版分钟服务才会执行后退出。pane 被显式命名时请先清除固定标签；tab 自动命名需要安装时加 `--auto-tabs`。
 
 ## 从早期本机脚本迁移
 

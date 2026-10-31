@@ -23,8 +23,8 @@ Requires Python 3.11+ and Herdr on your PATH.
 ```sh
 git clone https://github.com/APhysickui/herdr-agent-sidebar.git
 cd herdr-agent-sidebar
-python3 install.py --with-pi --dry-run
-python3 install.py --with-pi
+python3 install.py --with-pi --auto-tabs --dry-run
+python3 install.py --with-pi --auto-tabs
 ```
 
 Use `--with-kimi` only for the documented `kimi-co` recognition problem. The installer refuses to mix its compatibility hook with existing official Herdr/Kimi hooks. Read [troubleshooting](docs/troubleshooting.md) before migrating.
@@ -37,8 +37,8 @@ Tested live on macOS with Herdr 0.8.2 and Kimi Code 2.1.1. Linux supports the ev
 - Manual pane names win. Use `herdr pane rename ID --clear` to return to automatic labels.
 - Pi labels use a shortened substantive user request. Existing sessions are matched using visible assistant text, not file recency alone. A Pi extension publishes new requests directly once loaded.
 - Generic launcher titles such as `codex resume` fall back to the working directory.
-- Events refresh immediately; the macOS timer checks every 60 seconds by default.
-- The runtime makes no model calls and uploads no session data.
+- Persistent event subscriptions coalesce updates for 250ms; local sessions have a two-second fallback. `--auto-tabs` synchronizes tab names and preserves subsequent manual renames.
+- Default mode makes no model calls. Optional task summarization must be explicitly configured; it sends only the latest task and limited project context to the selected provider and caches generated titles.
 
 ```sh
 herdr plugin action invoke community.agent-sidebar.refresh

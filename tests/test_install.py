@@ -57,8 +57,9 @@ delivery = "off"
 
     def test_generated_paths_are_resolved_for_launchd(self):
         data = plistlib.loads(install.timer_plist(Path('/tmp/a b'), '/tmp/python3', '/tmp/a.sock', 90))
-        self.assertEqual(data["ProgramArguments"][1], '/tmp/a b/sync.py')
-        self.assertEqual(data["StartInterval"], 90)
+        self.assertEqual(data["ProgramArguments"][1], '/tmp/a b/realtime.py')
+        self.assertTrue(data["KeepAlive"])
+        self.assertNotIn('StartInterval', data)
         self.assertEqual(data["EnvironmentVariables"]["HERDR_SOCKET_PATH"], '/tmp/a.sock')
 
     def args(self, home):

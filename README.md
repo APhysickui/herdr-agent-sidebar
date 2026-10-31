@@ -17,7 +17,7 @@
 ## 已有功能
 
 - **三行侧栏**：任务名 → agent / pane ID / 状态 → 项目目录。
-- **自动刷新**：新建、切换、移动 pane 和 agent 状态变化时刷新；macOS 默认每 60 秒再检查一次。
+- **自动刷新**：新建、切换、移动 pane 和 agent 状态变化时刷新；常驻监听事件，并每 2 秒检查会话文件。
 - **Pi 会话取名**：从对应会话的最近有效提问取前 36 个字符。不按“最近修改的会话文件”猜测，避免两个 Pi 串名；无需额外模型调用。
 - **Pi 输入扩展**：扩展加载后，新提问直接发布任务标签；已有进程仍可用本地会话匹配更新。
 - **Kimi Code 兼容**：可选的生命周期钩子，处理 Herdr 0.8.2 未识别 `kimi-co` 的情况，显示工作、等待确认和空闲状态。
@@ -33,16 +33,16 @@ git clone https://github.com/APhysickui/herdr-agent-sidebar.git
 cd herdr-agent-sidebar
 
 # 先预览，不修改文件
-python3 install.py --with-pi --dry-run
+python3 install.py --with-pi --auto-tabs --dry-run
 
-# 安装侧栏、Pi 自动命名，以及 macOS 的每分钟刷新
-python3 install.py --with-pi
+# 安装侧栏、Pi 自动命名，以及 macOS 的实时监听器
+python3 install.py --with-pi --auto-tabs
 ```
 
 如果你也遇到了 **Kimi Code 在 Herdr 中消失或 unknown**，阅读[兼容说明](docs/troubleshooting.md#kimi-code-不显示)后再加上 `--with-kimi`。已有官方 Kimi/Herdr 钩子时，安装器会要求先迁移，避免两个状态来源互相覆盖。
 
 ```sh
-python3 install.py --with-pi --with-kimi
+python3 install.py --with-pi --auto-tabs --with-kimi
 ```
 
 **实际验证环境：macOS、Herdr 0.8.2、Kimi Code 2.1.1。** Linux 支持安装事件刷新配置；定时服务目前仅自动生成 macOS LaunchAgent。CI 在 Linux/macOS 上验证 Python 逻辑和隔离安装，不代表所有终端版本都经过实际操作验证。
@@ -66,7 +66,7 @@ herdr pane rename w1:p1 --clear
 
 ## 自动命名的边界
 
-这里的“任务名”是提问或有效终端标题的短预览，**不是额外调用模型生成的摘要**。Pi 可以从本地会话补充信息；其他 agent 如果只提供 `codex resume` 这样的通用标题，会回退到目录。
+这里的“任务名”是提问或有效终端标题的短预览，**不是额外调用模型生成的摘要**。Pi、Codex、Kimi 可以从对应的本地会话补充信息；其他 agent 如果只提供 `codex resume` 这样的通用标题，会回退到目录。
 
 Pi 匹配不确定时不会把另一段会话硬塞给当前 pane。过短的“好的”“继续”等输入不会替换有效任务名。手动标签固定不变是明确的优先级，清除后才能自动更新。
 
@@ -83,6 +83,25 @@ python3 -m compileall -q install.py plugin
 
 ## 隐私与许可
 
-运行时读取的信息留在本机：pane 元数据、用于匹配的局部终端画面，以及启用 Pi 后的本地会话文件。任务预览会显示在 Herdr 侧栏中；项目不调用外部模型或上传聊天记录。仓库里的示例使用虚构任务，不包含真实会话。
+默认模式仅在本机读取 pane 元数据、局部终端画面和已启用的会话文件。可选模型摘要模式必须明确选择提供商：只发送最近任务及少量项目上下文，不发送整段会话或文件。生成标题以输入哈希缓存，网络请求在后台运行。仓库里的示例使用虚构任务，不包含真实会话。
 
 Apache-2.0，详见 [LICENSE](LICENSE) 和 [NOTICE](NOTICE)。这是独立社区项目，与 Herdr、Pi、Kimi 的官方团队无隶属关系。
+
+## 实时 pane 与 tab 名称
+
+安装时加 `--auto-tabs`，标签页名称会跟随其中的主要项目一起更新。事件合并窗口为 250ms，会话文件兜底检查默认为 2 秒。同一批次同步 pane 与 tab；空闲时不重复改名。
+
+实时版本已在 Herdr 0.9.5 上验证。Codex 使用精确会话 ID，或与终端页脚唯一匹配的线程名称定位当前日志；Kimi 使用当前会话的 `lastPrompt`，避免沿用首次提问标题。明确设置的 pane 名称仍优先；自动纳入 tab 后再次手动改名会固定该 tab。
+
+## 可选：任务摘要与更短的 tab
+
+顶端 tab 只使用主要项目或主题短名，如「Herdr 侧栏」「WorkBuddy」「中美关系史」，不拼接多个任务，也不显示 `+1`。默认宽度上限为 16 个终端字符单元。具体任务继续在侧栏按 pane 分别显示。明确启用摘要时，pane 显示具体任务如「中美关系史报告终检」，顶端 tab 则只显示「中美关系史」，而不是截取用户原话。
+
+```toml
+summarize_titles = true
+# 必须在确认任务文本可发送给该提供商后填写；空值不发出模型请求。
+summary_provider = "your-pi-provider-name"
+summary_model = "deepseek-v4-flash"
+```
+
+摘要适配器复用 `~/.pi/agent/models.json` 中明确选中的 OpenAI 兼容提供商，不复制密钥。只有任务变化时才后台生成并缓存；生成过程中保留上一条短摘要；失败后退避 5 分钟。没有可用摘要时用项目或 agent 短名，不把口语化的长提问作为替代标题。

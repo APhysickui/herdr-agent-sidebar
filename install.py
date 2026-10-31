@@ -102,13 +102,13 @@ def kimi_config(text, python, prefix):
 
 def manifest(python):
     template = (ROOT / "plugin/herdr-plugin.toml").read_text()
-    return template.replace('["python3", "sync.py"]', f'[{json.dumps(str(python))}, "sync.py"]')
+    return template.replace('["python3", "realtime.py", "--once"]', f'[{json.dumps(str(python))}, "realtime.py", "--once"]')
 
 
 def timer_plist(prefix, python, socket_path, interval):
     return plistlib.dumps({"Label": TIMER_ID,
-                          "ProgramArguments": [str(python), str(prefix / "sync.py"), "--periodic"],
-                          "StartInterval": interval, "RunAtLoad": True, "ProcessType": "Background",
+                          "ProgramArguments": [str(python), str(prefix / "realtime.py"), "--watch"],
+                          "KeepAlive": True, "ThrottleInterval": 5, "RunAtLoad": True, "ProcessType": "Background",
                           "EnvironmentVariables": {"HERDR_SOCKET_PATH": str(socket_path)},
                           "StandardErrorPath": str(prefix / "refresh.log")})
 
@@ -141,7 +141,10 @@ def install(args):
     settings = (f"herdr_binary = {json.dumps(herdr)}\nsocket_path = {json.dumps(str(socket_path))}\n"
                 f"pi_sessions = {json.dumps(str(home / '.pi/agent/sessions'))}\n"
                 f"pi_titles = {str(args.with_pi or state.get('with_pi', False)).lower()}\n"
-                f"kimi_compat = {str(args.with_kimi or state.get('with_kimi', False)).lower()}\n")
+                f"kimi_compat = {str(args.with_kimi or state.get('with_kimi', False)).lower()}\n"
+                f"auto_tabs = {str(getattr(args, 'auto_tabs', False) or state.get('auto_tabs', False)).lower()}\n"
+                f"adopt_tabs = {str(getattr(args, 'auto_tabs', False) or state.get('auto_tabs', False)).lower()}\n"
+                f"poll_seconds = {args.interval}\n")
     writes[prefix / "settings.toml"] = settings.encode()
     existing = config.read_text() if config.exists() else ""
     writes[config] = table_keys(existing, "ui.sidebar.agents", {"rows": ROWS}).encode()
@@ -166,7 +169,8 @@ def install(args):
             state["files"][key] = {"original": base64.b64encode(path.read_bytes()).decode() if path.exists() else None}
         state["files"][key]["installed_sha256"] = digest(data)
     state.update({"herdr": herdr, "timer": timer, "with_pi": args.with_pi or state.get("with_pi", False),
-                  "with_kimi": args.with_kimi or state.get("with_kimi", False)})
+                  "with_kimi": args.with_kimi or state.get("with_kimi", False),
+                  "auto_tabs": getattr(args, 'auto_tabs', False) or state.get('auto_tabs', False)})
     # Save recovery information before writing anything else.
     state_path.write_text(json.dumps(state, indent=2))
     state_path.chmod(0o600)
@@ -182,7 +186,7 @@ def install(args):
     command([herdr, "plugin", "link", prefix, "--enabled"])
     command([herdr, "server", "reload-config"], check=False)
     env = dict(os.environ, HERDR_SOCKET_PATH=str(socket_path))
-    subprocess.run([str(python), str(prefix / "sync.py"), "--periodic"], env=env, check=True)
+    subprocess.run([str(python), str(prefix / "realtime.py"), "--once"], env=env, check=True)
     if timer:
         target = f"gui/{os.getuid()}"
         command(["launchctl", "bootout", f"{target}/{TIMER_ID}"], check=False)
@@ -227,7 +231,8 @@ def main():
     parser.add_argument("--config", type=Path, default=Path.home() / ".config/herdr/config.toml")
     parser.add_argument("--socket", type=Path, default=Path.home() / ".config/herdr/herdr.sock")
     parser.add_argument("--herdr", default="herdr")
-    parser.add_argument("--interval", type=int, default=60)
+    parser.add_argument("--interval", type=float, default=2.0, help="Session file fallback interval in seconds")
+    parser.add_argument("--auto-tabs", action="store_true", help="Adopt existing tabs for automatic task names")
     parser.add_argument("--with-pi", action="store_true")
     parser.add_argument("--with-kimi", action="store_true")
     parser.add_argument("--no-timer", action="store_true")
@@ -235,8 +240,8 @@ def main():
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--uninstall", action="store_true")
     args = parser.parse_args()
-    if args.interval < 10:
-        parser.error("--interval must be at least 10 seconds")
+    if args.interval < 0.5:
+        parser.error("--interval must be at least 0.5 seconds")
     try:
         (uninstall if args.uninstall else install)(args)
     except (OSError, ValueError, subprocess.SubprocessError) as error:

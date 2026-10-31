@@ -13,6 +13,13 @@ class Settings:
     pi_sessions: str = ""
     pi_titles: bool = True
     kimi_compat: bool = False
+    auto_tabs: bool = False
+    adopt_tabs: bool = False
+    poll_seconds: float = 2.0
+    summary_provider: str = ""
+    summary_model: str = "deepseek-v4-flash"
+    summarize_titles: bool = False
+    tab_max_cells: int = 16
 
 
 def load_settings():

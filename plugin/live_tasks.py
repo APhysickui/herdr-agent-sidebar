@@ -35,7 +35,7 @@ def prompt_title(text):
     return text[:36] + ("…" if len(text) > 36 else "")
 
 
-def pi_session_title(pane, screen, root=None):
+def pi_session_title(pane, screen, root=None, raw=False):
     """Match visible assistant text to one session; never guess by file recency."""
     root = root or Path.home() / ".pi/agent/sessions"
     cwd = pane.get("cwd", "")
@@ -60,7 +60,8 @@ def pi_session_title(pane, screen, root=None):
         score = sum(sample in assistant for sample in samples)
         if score < 2:
             continue
-        title = next((t for m in reversed(messages) if m.get("role") == "user"
+        title = next(((text_content(m.get("content"))[:1600] if raw else t)
+                      for m in reversed(messages) if m.get("role") == "user"
                       and (t := prompt_title(text_content(m.get("content"))))), None)
         if title:
             matches.append((score, title))

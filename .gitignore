@@ -8,3 +8,5 @@ htmlcov/
 *.zip
 .runtime/
 plugin/settings.toml
+plugin/realtime-*.json
+plugin/realtime-*.lock

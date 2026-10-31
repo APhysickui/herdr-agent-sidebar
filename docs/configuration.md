@@ -18,6 +18,9 @@ socket_path = ""
 pi_sessions = ""
 pi_titles = true
 kimi_compat = false
+auto_tabs = false
+adopt_tabs = false
+poll_seconds = 2.0
 ```
 
 安装器会填写当前机器的绝对路径。空 socket 路径默认使用当前用户的 `~/.config/herdr/herdr.sock`，空 Pi 会话路径默认使用 `~/.pi/agent/sessions`。`HERDR_SIDEBAR_CONFIG` 可指向另一份设置。

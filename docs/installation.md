@@ -9,7 +9,7 @@ python3 install.py
 
 默认安装到 `~/.local/share/herdr-agent-sidebar`，链接插件 `community.agent-sidebar`，将侧栏布局合并进 `~/.config/herdr/config.toml`。不会修改主题、前缀键、排序和其他插件配置。
 
-macOS 会生成 `~/Library/LaunchAgents/dev.herdr.agent-sidebar.plist`，在当前用户登录会话中每分钟运行一次。Herdr 没运行时跳过检查。Linux 不创建定时服务，仍会响应插件事件。
+macOS 会生成 `~/Library/LaunchAgents/dev.herdr.agent-sidebar.plist`，在当前用户登录会话中常驻监听，并每 2 秒检查会话文件。Herdr 没运行时等待重连。Linux 不创建定时服务，仍会响应插件事件。
 
 ## 可选项
 
@@ -21,7 +21,8 @@ macOS 会生成 `~/Library/LaunchAgents/dev.herdr.agent-sidebar.plist`，在当�
 | `--herdr PATH` | 指定 Herdr 可执行文件 |
 | `--config PATH` | 指定 Herdr 配置文件 |
 | `--socket PATH` | 指定当前 Herdr 会话的 socket |
-| `--interval 90` | macOS 定时刷新间隔，至少 10 秒 |
+| `--interval 2` | 会话文件兜底检查间隔，至少 0.5 秒 |
+| `--auto-tabs` | 将现有 tab 纳入任务自动命名；之后手动改名会保留 |
 | `--no-timer` | 仅安装事件刷新，不创建定时服务 |
 | `--no-activate` | 只写文件，不链接插件或启动服务 |
 | `--dry-run` | 列出文件和操作，不写入或启动任何内容 |

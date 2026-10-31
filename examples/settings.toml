@@ -5,3 +5,16 @@ pi_sessions = ""
 pi_titles = true
 # Only enable for Herdr versions with the kimi-co process recognition problem.
 kimi_compat = false
+
+# --auto-tabs adopts existing tabs; later manual renames are kept.
+auto_tabs = false
+adopt_tabs = false
+poll_seconds = 2.0
+
+# Opt in only after authorizing this destination for task text/context.
+summarize_titles = false
+summary_provider = ""
+summary_model = "deepseek-v4-flash"
+
+# Short project/topic in the top bar; full task details stay in the sidebar.
+tab_max_cells = 16
