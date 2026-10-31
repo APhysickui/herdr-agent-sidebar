@@ -15,6 +15,7 @@ macOS 会生成 `~/Library/LaunchAgents/dev.herdr.agent-sidebar.plist`，在当�
 
 | 参数 | 作用 |
 | --- | --- |
+| `--with-claude` | 安装 Claude 按会话区分的任务输入采集 hook |
 | `--with-pi` | 安装 Pi 输入扩展，并启用已有会话的自动取名 |
 | `--with-kimi` | 安装 Kimi 状态兼容钩子，需先检查旧集成 |
 | `--prefix PATH` | 自定义安装目录，不能是源码目录 |

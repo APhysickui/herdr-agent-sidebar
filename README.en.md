@@ -23,8 +23,8 @@ Requires Python 3.11+ and Herdr on your PATH.
 ```sh
 git clone https://github.com/APhysickui/herdr-agent-sidebar.git
 cd herdr-agent-sidebar
-python3 install.py --with-pi --auto-tabs --dry-run
-python3 install.py --with-pi --auto-tabs
+python3 install.py --with-pi --with-claude --auto-tabs --dry-run
+python3 install.py --with-pi --with-claude --auto-tabs
 ```
 
 Use `--with-kimi` only for the documented `kimi-co` recognition problem. The installer refuses to mix its compatibility hook with existing official Herdr/Kimi hooks. Read [troubleshooting](docs/troubleshooting.md) before migrating.
@@ -56,3 +56,5 @@ python3 -m compileall -q install.py plugin
 ```
 
 See [installation](docs/installation.md), [configuration](docs/configuration.md), [architecture](docs/architecture.md), and [troubleshooting](docs/troubleshooting.md). Apache-2.0; acknowledgements in [NOTICE](NOTICE).
+
+Claude task input can be captured with `--with-claude`, preserving other hooks. PID-to-session mapping distinguishes existing instances in the same directory. Pi input metadata never writes a raw prompt directly into the rendered title. Greeting-only sessions use distinct session labels until there is a task to summarize.

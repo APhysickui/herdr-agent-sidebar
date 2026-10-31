@@ -87,10 +87,12 @@ class Summaries:
         if self.future is not None and self.future.done():
             try:
                 results = self.future.result()
+                self.state['summary_status'] = {'state': 'ready', 'completed_at': int(time.time()), 'items': len(results)}
                 self.cache.update(results)
                 for key in self.inflight - results.keys():
                     self.failed[key] = time.monotonic()
-            except Exception:
+            except Exception as error:
+                self.state['summary_status'] = {'state': 'failed', 'completed_at': int(time.time()), 'error_type': type(error).__name__}
                 # No response bodies or credentials in logs. Keep the previous
                 # good summary and back off instead of exposing raw chat text.
                 for key in self.inflight:
@@ -130,3 +132,4 @@ class Summaries:
             for key in self.inflight:
                 self.pending.pop(key, None)
             self.future = self.pool.submit(self.backend, jobs, self.settings)
+            self.state['summary_status'] = {'state': 'running', 'items': len(jobs), 'started_at': int(time.time())}

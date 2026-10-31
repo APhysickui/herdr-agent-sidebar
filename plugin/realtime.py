@@ -78,6 +78,70 @@ class SessionTitles:
         self.paths = {}
         self.cache = {}
 
+    def latest_claude(self, path):
+        try:
+            path = Path(path)
+            stat = path.stat()
+            signature = (stat.st_mtime_ns, stat.st_size)
+            cached = self.cache.get(str(path))
+            if cached and cached[0] == signature:
+                return cached[1]
+            with path.open('rb') as file:
+                offset = max(0, stat.st_size - 1_000_000)
+                file.seek(offset)
+                if offset:
+                    file.readline()
+                lines = file.read().splitlines()
+            title = None
+            for line in reversed(lines):
+                try:
+                    record = json.loads(line)
+                except ValueError:
+                    continue
+                if record.get('type') != 'user' or record.get('isMeta'):
+                    continue
+                content = record.get('message', {}).get('content', '')
+                if isinstance(content, list):
+                    content = ' '.join(item.get('text', '') for item in content if item.get('type') == 'text')
+                if not isinstance(content, str) or content.lstrip().startswith(('<local-command', '<command-name>', '<system-reminder>')):
+                    continue
+                title = task_input(content)
+                if title:
+                    break
+            self.cache[str(path)] = (signature, title)
+            return title
+        except OSError:
+            return None
+
+    def claude_title(self, pane, api):
+        tokens = pane.get('tokens', {})
+        session = (pane.get('agent_session') or {}).get('value')
+        if tokens.get('task_agent') == 'claude':
+            session = tokens.get('task_session') or session
+            pane['_task_session'] = session
+            if tokens.get('live_task'):
+                return task_input(tokens['live_task'])
+        if not session:
+            info = api.call('pane.process_info', pane_id=pane['pane_id'])['process_info']
+            for process in info.get('foreground_processes', []):
+                if 'claude' not in process.get('name', '').lower():
+                    continue
+                path = self.home / '.claude/sessions' / f"{process['pid']}.json"
+                try:
+                    record = json.loads(path.read_text())
+                    if record.get('cwd') == pane.get('cwd'):
+                        session = record.get('sessionId')
+                        break
+                except (OSError, ValueError):
+                    continue
+        if not session or Path(session).name != session:
+            return None
+        pane['_task_session'] = session
+        candidates = list((self.home / '.claude/projects').glob(f'*/{session}.jsonl'))
+        if len(candidates) == 1:
+            return self.latest_claude(candidates[0])
+        return None
+
     def latest_codex(self, path):
         path = Path(path)
         try:
@@ -166,6 +230,8 @@ class SessionTitles:
             return None
 
     def resolve(self, pane, api):
+        if pane.get('agent') == 'claude':
+            return self.claude_title(pane, api)
         if pane.get("agent") == "pi":
             live = pane.get("tokens", {}).get("live_task")
             if live:
@@ -239,7 +305,9 @@ class Engine:
                 reconcile(self.settings.herdr_binary, pane, periodic=True, settings=self.settings)
             title = self.titles.resolve(pane, self.api) if not (
                 self.settings and not self.settings.pi_titles and pane.get("agent") == "pi") else None
-            identity = pane.get("terminal_id", pane["pane_id"])
+            identity = (pane.get("terminal_id", pane["pane_id"]), pane.get('agent'),
+                        pane.get('_task_session') or pane.get('tokens', {}).get('task_session')
+                        or (pane.get('agent_session') or {}).get('value'))
             if title:
                 self.last_inputs[identity] = (title, pane.get("_summary_context", ""))
             elif pane.get("agent") and identity in self.last_inputs:
@@ -249,11 +317,16 @@ class Engine:
                 title, pane["_tab_task"] = summary["pane"], summary["tab"]
             if title:
                 pane["_live_task"] = title
+            elif pane.get('agent') in {'claude', 'pi'}:
+                # Empty/greeting-only conversations still need distinct labels.
+                suffix = (pane.get('_task_session') or pane['pane_id']).split('-')[0][-6:]
+                brand = 'Claude' if pane['agent'] == 'claude' else 'Pi'
+                pane['_live_task'] = f'{brand} 会话 {suffix}'
             values = sidebar_values(pane)
             existing = pane.setdefault("tokens", {})
             changed = {key: value for key, value in values.items() if existing.get(key) != value}
             if changed:
-                self.api.call("pane.report_metadata", pane_id=pane["pane_id"], source="local.pane-id", tokens=changed)
+                self.api.call("pane.report_metadata", pane_id=pane["pane_id"], source="local.pane-id", seq=time.time_ns(), tokens=changed)
                 for key, value in changed.items():
                     if value is None:
                         existing.pop(key, None)
@@ -279,6 +352,7 @@ class Engine:
                     writes += 1
         if self.summaries:
             self.summaries.flush()
+        self.state['refresh_status'] = {'completed_at': int(time.time()), 'panes': len(panes)}
         return writes
 
 

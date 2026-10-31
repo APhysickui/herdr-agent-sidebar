@@ -30,7 +30,7 @@ def compact(text):
 def prompt_title(text):
     text = re.sub(r"<[^>]+>[\s\S]*?</[^>]+>", "", text)
     text = " ".join(text.split()).strip()
-    if len(text) < 6 or text.lower() in {"resume", "continue", "你好", "继续", "可以", "好的"}:
+    if len(text) < 2 or text.lower() in {"resume", "continue", "hi", "hello", "hey", "你好", "您好", "在吗", "谢谢", "继续", "可以", "好的", "ok", "okk"}:
         return None
     return text[:36] + ("…" if len(text) > 36 else "")
 

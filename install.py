@@ -105,6 +105,15 @@ def manifest(python):
     return template.replace('["python3", "realtime.py", "--once"]', f'[{json.dumps(str(python))}, "realtime.py", "--once"]')
 
 
+def claude_config(text, python, prefix):
+    data = json.loads(text) if text.strip() else {}
+    entries = data.setdefault('hooks', {}).setdefault('UserPromptSubmit', [])
+    cmd = shlex.join([str(python), str(prefix / 'agent_input.py')])
+    if not any(h.get('command') == cmd for entry in entries for h in entry.get('hooks', [])):
+        entries.append({'hooks': [{'type': 'command', 'command': cmd, 'timeout': 2}]})
+    return json.dumps(data, ensure_ascii=False, indent=2) + '\n'
+
+
 def timer_plist(prefix, python, socket_path, interval):
     return plistlib.dumps({"Label": TIMER_ID,
                           "ProgramArguments": [str(python), str(prefix / "realtime.py"), "--watch"],
@@ -153,6 +162,9 @@ def install(args):
     if args.with_kimi or state.get("with_kimi", False):
         path = home / ".kimi-code/config.toml"
         writes[path] = kimi_config(path.read_text() if path.exists() else "", python, prefix).encode()
+    if getattr(args, 'with_claude', False) or state.get('with_claude', False):
+        path = home / '.claude/settings.json'
+        writes[path] = claude_config(path.read_text() if path.exists() else '', python, prefix).encode()
     timer = sys.platform == "darwin" and not args.no_timer
     if timer:
         writes[home / "Library/LaunchAgents" / f"{TIMER_ID}.plist"] = timer_plist(prefix, python, socket_path, args.interval)
@@ -171,6 +183,7 @@ def install(args):
     state.update({"herdr": herdr, "timer": timer, "with_pi": args.with_pi or state.get("with_pi", False),
                   "with_kimi": args.with_kimi or state.get("with_kimi", False),
                   "auto_tabs": getattr(args, 'auto_tabs', False) or state.get('auto_tabs', False)})
+    state['with_claude'] = getattr(args, 'with_claude', False) or state.get('with_claude', False)
     # Save recovery information before writing anything else.
     state_path.write_text(json.dumps(state, indent=2))
     state_path.chmod(0o600)
@@ -178,7 +191,7 @@ def install(args):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(data)
         # Backups may contain existing credentials; restrict managed config copies.
-        if path in (config, home / ".kimi-code/config.toml"):
+        if path in (config, home / ".kimi-code/config.toml", home / '.claude/settings.json'):
             path.chmod(0o600)
     if args.no_activate:
         print(f"Files installed to {prefix}; runtime activation skipped.")
@@ -235,6 +248,7 @@ def main():
     parser.add_argument("--auto-tabs", action="store_true", help="Adopt existing tabs for automatic task names")
     parser.add_argument("--with-pi", action="store_true")
     parser.add_argument("--with-kimi", action="store_true")
+    parser.add_argument("--with-claude", action="store_true", help="Capture Claude task input with per-session metadata")
     parser.add_argument("--no-timer", action="store_true")
     parser.add_argument("--no-activate", action="store_true", help="Write files without linking or starting services")
     parser.add_argument("--dry-run", action="store_true")

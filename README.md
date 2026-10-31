@@ -33,16 +33,16 @@ git clone https://github.com/APhysickui/herdr-agent-sidebar.git
 cd herdr-agent-sidebar
 
 # 先预览，不修改文件
-python3 install.py --with-pi --auto-tabs --dry-run
+python3 install.py --with-pi --with-claude --auto-tabs --dry-run
 
 # 安装侧栏、Pi 自动命名，以及 macOS 的实时监听器
-python3 install.py --with-pi --auto-tabs
+python3 install.py --with-pi --with-claude --auto-tabs
 ```
 
 如果你也遇到了 **Kimi Code 在 Herdr 中消失或 unknown**，阅读[兼容说明](docs/troubleshooting.md#kimi-code-不显示)后再加上 `--with-kimi`。已有官方 Kimi/Herdr 钩子时，安装器会要求先迁移，避免两个状态来源互相覆盖。
 
 ```sh
-python3 install.py --with-pi --auto-tabs --with-kimi
+python3 install.py --with-pi --with-claude --auto-tabs --with-kimi
 ```
 
 **实际验证环境：macOS、Herdr 0.8.2、Kimi Code 2.1.1。** Linux 支持安装事件刷新配置；定时服务目前仅自动生成 macOS LaunchAgent。CI 在 Linux/macOS 上验证 Python 逻辑和隔离安装，不代表所有终端版本都经过实际操作验证。
@@ -105,3 +105,9 @@ summary_model = "deepseek-v4-flash"
 ```
 
 摘要适配器复用 `~/.pi/agent/models.json` 中明确选中的 OpenAI 兼容提供商，不复制密钥。只有任务变化时才后台生成并缓存；生成过程中保留上一条短摘要；失败后退避 5 分钟。没有可用摘要时用项目或 agent 短名，不把口语化的长提问作为替代标题。
+
+## Pi 与 Claude 的输入采集
+
+Pi 输入扩展只发布 `live_task` 和会话标识，不再直接覆盖侧栏的 `task` 标题。Claude 可通过 `--with-claude` 安装 `UserPromptSubmit` hook；已有会话还可以通过进程 PID 对应的会话文件定位，避免同目录多实例串名。
+
+仅有 `hi` 等寒暄时不会编造任务，会显示带会话标识的占位名称。发送具体任务后自动生成摘要。原始提问不会直接作为侧栏标题显示。刷新和模型状态记录在本地状态文件的 `refresh_status`、`summary_status`，不记录密钥或请求正文。
